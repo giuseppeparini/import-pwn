@@ -5,7 +5,7 @@ module Main where
 import qualified Control.Exception as E
 import Data.Binary (encode)
 import qualified Data.ByteString.Lazy as B
-import Data.Char (isSpace, ord)
+import Data.Char (isSpace)
 import Data.List (stripPrefix)
 import Data.Word (Word32, Word64)
 import Network.Socket
@@ -33,28 +33,25 @@ parse (stripPrefix "Please send me the number " -> Just rest) =
       splitNum rest
   where
     splitNum = break isSpace
-    parseBits (n, rest) = case rest of
-      (stripPrefix " as a 32-bit " -> Just remaining) -> (U32 (read n), remaining)
-      (stripPrefix " as a 64-bit " -> Just remaining) -> (U64 (read n), remaining)
-      _ -> error "unreachable"
-    parseEndian rest = case rest of
-      (stripPrefix "big-endian " -> Just _) -> BigEndian
-      (stripPrefix "little-endian " -> Just _) -> LittleEndian
-      _ -> error "unreachable"
+    parseBits (n, stripPrefix " as a 32-bit " -> Just rest) = (U32 (read n), rest)
+    parseBits (n, stripPrefix " as a 64-bit " -> Just rest) = (U64 (read n), rest)
+    parseBits _ = error "unreachable"
+    parseEndian (stripPrefix "big-endian " -> Just _) = BigEndian
+    parseEndian (stripPrefix "little-endian " -> Just _) = LittleEndian
+    parseEndian _ = error "unreachable"
 parse (stripPrefix "Please send me an empty line " -> Just _) = NewLine
 parse _ = error "unreachable"
 
-trans :: Value -> ByteOrder -> Value
-trans v BigEndian = toBigEndian v
-trans v LittleEndian = toLittleEndian v
-
-encodeValue :: Value -> B.ByteString
-encodeValue (U32 v) = encode $ toBigEndian v
-encodeValue (U64 v) = encode $ toBigEndian v
-
 handle :: Request -> B.ByteString
 handle (Number v end) = encodeValue $ trans v end
-handle NewLine = B.pack [fromIntegral $ ord '\n']
+  where
+    trans v BigEndian = toBigEndian v
+    trans v LittleEndian = toLittleEndian v
+    -- toBigEndian swaps bytes if the target machine is little endian because
+    -- encode swaps them again
+    encodeValue (U32 v) = encode $ toBigEndian v
+    encodeValue (U64 v) = encode $ toBigEndian v
+handle NewLine = B.pack [10]
 
 tryhGetLine :: Handle -> IO (Maybe String)
 tryhGetLine h = do
@@ -82,7 +79,6 @@ main = runTCPClient "piecewise.challs.cyberchallenge.it" "9110" $ \s -> do
   h <- socketToHandle s ReadWriteMode
   hSetBuffering h LineBuffering
   loop h
-  return ()
 
 runTCPClient :: HostName -> ServiceName -> (Socket -> IO a) -> IO a
 runTCPClient host port client = withSocketsDo $ do
