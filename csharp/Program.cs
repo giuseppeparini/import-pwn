@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -18,8 +17,8 @@ namespace Csharp
             var matcher = new Regex(@"^Please send me the number (\d+) as a (32|64)-bit (big|little)-endian ", RegexOptions.Compiled);
 
             var streamReader = new StreamReader(client.GetStream(), Encoding.UTF8);
-            string line = streamReader.ReadLine();
-            while (line is object)
+            string? line;
+            while ((line = streamReader.ReadLine()) != null)
             {
                 Console.WriteLine("Text from Server: " + line);
 
@@ -38,9 +37,7 @@ namespace Csharp
                 }
                 else if (line.StartsWith("Please send me an empty line"))
                 {
-                    var bytes = new byte[2];
-                    bytes[0] = 10;
-                    client.GetStream().Write(bytes, 0, 1);
+                    client.GetStream().Write(new byte[] { 10 }, 0, 1);
                     client.GetStream().Flush();
                 }
                 else
@@ -50,9 +47,10 @@ namespace Csharp
 
                 }
 
-                line = streamReader.ReadLine();
-                Console.WriteLine(line);
-                line = streamReader.ReadLine();
+                if ((line = streamReader.ReadLine()) != null)
+                {
+                    Console.WriteLine(line);
+                }
             }
         }
 
