@@ -14,21 +14,21 @@ namespace Csharp
 
             var client = new TcpClient();
             client.Connect(HOST, PORT);
-            
+
             var matcher = new Regex(@"^Please send me the number (\d+) as a (32|64)-bit (big|little)-endian ", RegexOptions.Compiled);
 
-            var streamReader= new StreamReader(client.GetStream(), Encoding.UTF8);
+            var streamReader = new StreamReader(client.GetStream(), Encoding.UTF8);
             string line = streamReader.ReadLine();
             while (line is object)
             {
-                Console.WriteLine("Text from Server: " + line); 
+                Console.WriteLine("Text from Server: " + line);
 
                 var match = matcher.Match(line);
                 if (match.Success)
                 {
                     var message = Parser(match.Groups[1].Value, uint.Parse(match.Groups[2].Value));
                     string ness = match.Groups[3].Value;
-                    
+
                     if ((BitConverter.IsLittleEndian ? "little" : "big") != ness)
                     {
                         Array.Reverse(message);
@@ -47,9 +47,9 @@ namespace Csharp
                 {
                     var e = new Exception();
                     throw e;
-                   
+
                 }
-                
+
                 line = streamReader.ReadLine();
                 Console.WriteLine(line);
                 line = streamReader.ReadLine();
@@ -72,7 +72,7 @@ namespace Csharp
             {
                 var e = new Exception();
                 throw e;
-            } 
+            }
         }
     }
 }
