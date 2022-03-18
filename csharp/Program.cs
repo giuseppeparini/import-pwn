@@ -6,11 +6,11 @@ namespace Csharp
 {
     class Program
     {
+        const string HOST = "piecewise.challs.cyberchallenge.it";
+        const int PORT = 9110;
+
         public static void Main(string[] args)
         {
-            const string HOST = "piecewise.challs.cyberchallenge.it";
-            const int PORT = 9110;
-
             var client = new TcpClient();
             client.Connect(HOST, PORT);
 
@@ -42,9 +42,7 @@ namespace Csharp
                 }
                 else
                 {
-                    var e = new Exception();
-                    throw e;
-
+                    throw new Exception("unreachable");
                 }
 
                 if ((line = streamReader.ReadLine()) != null)
@@ -68,8 +66,7 @@ namespace Csharp
             }
             else
             {
-                var e = new Exception();
-                throw e;
+                throw new Exception("unreachable");
             }
         }
     }
