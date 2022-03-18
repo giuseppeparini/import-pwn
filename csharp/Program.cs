@@ -20,7 +20,7 @@ namespace Csharp
             string? line;
             while ((line = streamReader.ReadLine()) != null)
             {
-                Console.WriteLine("Text from Server: " + line);
+                Console.WriteLine(line);
 
                 var match = matcher.Match(line);
                 if (match.Success)
@@ -34,6 +34,7 @@ namespace Csharp
                     }
 
                     client.GetStream().Write(message, 0, message.Length);
+                    client.GetStream().Flush();
                 }
                 else if (line.StartsWith("Please send me an empty line"))
                 {
